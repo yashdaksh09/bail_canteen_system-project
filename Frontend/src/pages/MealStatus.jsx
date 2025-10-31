@@ -1,45 +1,53 @@
 import React, { useEffect, useState } from "react";
-
 function MealStatus() {
-  const [meals, setMeals] = useState([]);
+  const [meal, setMeal] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:8081/get-meal-status")
-      .then((res) => res.json())
-      .then((data) => setMeals(data))
-      .catch((err) => console.error("Error loading meal status:", err));
+    const employeeCode = localStorage.getItem("employee_code"); // ✅ Get stored employee code
+    console.log("👤 Employee Code from localStorage:", employeeCode);
+
+    if (!employeeCode) {
+      setError("⚠️ Employee code not found. Please scan your QR again.");
+      return;
+    }   
+
+    fetch(`http://localhost:8281/meal-status/${employeeCode}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Network response was not ok");
+        return res.json();
+      })
+      .then((data) => {
+        console.log("🍽️ Meal data received:", data);
+        if (data && data.meal_type) {
+          setMeal(data);
+        } else {
+          setError("⚠️ No recent meal found.");
+        }
+      })
+      .catch((err) => {
+        console.error("❌ Fetch error:", err);
+        setError("⚠️ No recent meal found.");
+      });
   }, []);
 
-  return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <h2 className="text-2xl font-bold mb-4">🍽️ Meal Status</h2>
+  if (error) return <p className="mt-5 text-red-600">{error}</p>;
 
-      {meals.length === 0 ? (
-        <p>No meals recorded yet.</p>
-      ) : (
-        <table className="w-full bg-white rounded-lg shadow">
-          <thead className="bg-blue-600 text-white">
-            <tr>
-              <th className="p-2">Token</th>
-              <th className="p-2">Name</th>
-              <th className="p-2">Meal</th>
-              <th className="p-2">Quantity</th>
-              <th className="p-2">Time</th>
-            </tr>
-          </thead>
-          <tbody>
-            {meals.map((m) => (
-              <tr key={m.token_number} className="border-t text-center">
-                <td className="p-2 font-bold">{m.token_number}</td>
-                <td className="p-2">{m.employee_name}</td>
-                <td className="p-2">{m.meal_type}</td>
-                <td className="p-2">{m.quantity}</td>
-                <td className="p-2">{new Date(m.order_time).toLocaleString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+  if (!meal) return <p className="mt-5">Loading meal data...</p>;
+
+  return (
+    <div className="p-6 max-w-md mx-auto bg-white rounded-xl shadow-md mt-10">
+      <h2 className="text-xl font-bold mb-4 text-center">🍴 Latest Meal Status</h2>
+      <div className="space-y-2">
+        <p><strong>Employee Code:</strong> {meal.employee_code}</p>
+        <p><strong>Name:</strong> {meal.employee_name}</p>
+        <p><strong>Department:</strong> {meal.employee_department}</p>
+        <p><strong>Designation:</strong> {meal.employee_designation}</p>
+        <p><strong>Meal Type:</strong> {meal.meal_type}</p>
+        <p><strong>Quantity:</strong> {meal.quantity}</p>
+        <p><strong>Token Number:</strong> {meal.token_number}</p>
+        <p><strong>Order Time:</strong> {new Date(meal.order_time).toLocaleString()}</p>
+      </div>
     </div>
   );
 }

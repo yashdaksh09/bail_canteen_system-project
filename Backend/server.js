@@ -107,6 +107,42 @@ app.get("/get-meal-status", (req, res) => {
   });
 });
 
+
+//meal status track api
+app.get("/meal-status/:employee_code", (req, res) => {
+  const { employee_code } = req.params;
+
+  console.log("🔍 Fetching meal for:", employee_code);
+
+  const query = `
+    SELECT * 
+    FROM canteen_system_data 
+    WHERE employee_code = ? 
+    ORDER BY order_time DESC 
+    LIMIT 1
+  `;
+
+  db.query(query, [employee_code], (err, results) => {
+    if (err) {
+      console.error("❌ Error fetching meal data:", err);
+      return res.status(500).json({ message: "Server error" });
+    }
+
+    if (results.length === 0) {
+      console.log("⚠️ No recent meal found for", employee_code);
+      return res.status(404).json({ message: "No recent meal found" });
+    }
+
+    console.log("✅ Latest meal found:", results[0]);
+    res.json(results[0]);
+  });
+});
+
+
+
 app.listen(8281, () => {
   console.log("🚀 Server running on http://localhost:8281");
 });
+
+
+

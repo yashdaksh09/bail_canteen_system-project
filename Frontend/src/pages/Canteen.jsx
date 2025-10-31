@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { data, useNavigate } from "react-router-dom";
 
 function Canteen() {
   const [employee, setEmployee] = useState(null);
@@ -20,8 +20,14 @@ function Canteen() {
         .then((data) => {
           console.log("Employee Data:", data);
           setEmployee(data);
-        })
-        .catch((err) => console.error("Error fetching employee:", err));
+
+          if(data && data.employee_code){
+          localStorage.setItem("employee_code", data.employee_code);
+          console.log("Employee code saved", data.employee_code);
+        }
+        }).catch((err) => console.error("Error fetching employee:", err));
+
+        
     }
 
     // Determine meal timing
@@ -30,7 +36,7 @@ function Canteen() {
 
     if (hour >= 7 && hour < 10.5) setAvailableMeal("Breakfast");
     else if (hour >= 11 && hour < 15) setAvailableMeal("Lunch");
-    else if (hour >= 16 && hour < 18.5) setAvailableMeal("Snacks");
+    else if (hour >= 15 && hour < 18.5) setAvailableMeal("Snacks");
     else if (hour >= 19 && hour < 22) setAvailableMeal("Dinner");
     else setAvailableMeal("None");
   }, []);
@@ -127,6 +133,7 @@ function Canteen() {
           {message && <p className="mt-3 text-red-600">{message}</p>}
         </div>
       )}
+
     </div>
   );
 }
